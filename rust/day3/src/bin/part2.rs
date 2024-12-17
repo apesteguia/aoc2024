@@ -8,34 +8,43 @@ fn main() -> std::io::Result<()> {
     let path = shared::input_path();
     let buffer = fs::read_to_string(&path)?;
 
-    let mul_re = Regex::new(r"mul\((\d{1,3}),\s*(\d{1,3})\)").unwrap();
-    let do_re = Regex::new(r"do\(\)").unwrap();
-    let dont_re = Regex::new(r"don't\(\)").unwrap();
+    let regexes = vec![
+        Regex::new(r"mul\((\d{1,3}),\s*(\d{1,3})\)").unwrap(),
+        Regex::new(r"do\(\)").unwrap(),
+        Regex::new(r"don't\(\)").unwrap(),
+    ];
 
-    let mut total_sum = 0;
-    let mut mul_enabled = true;
-
-    for line in buffer.lines() {
-        // Check for do() and don't() instructions
-        println!("{}", line);
-        if do_re.is_match(line) {
-            mul_enabled = true;
-        } else if dont_re.is_match(line) {
-            mul_enabled = false;
-        }
-
-        // Find and process mul instructions
-        for cap in mul_re.captures_iter(line) {
-            if mul_enabled {
-                let num1: i32 = cap.get(1).unwrap().as_str().parse().unwrap();
-                let num2: i32 = cap.get(2).unwrap().as_str().parse().unwrap();
-
-                total_sum += num1 * num2;
-            }
+    let mut matches: Vec<(usize, String)> = Vec::new();
+    for (i, re) in regexes.iter().enumerate() {
+        for mat in re.find_iter(&buffer) {
+            matches.push((mat.start(), format!("Expresión{}: {}", i + 1, mat.as_str())));
         }
     }
 
-    println!("Total sum of enabled multiplications: {}", total_sum);
+    matches.sort_by_key(|k| k.0);
+    let mut counter = 0;
+    let mut enabled = true;
+
+    let mul = Regex::new(r"mul\((\d{1,3}),\s*(\d{1,3})\)").unwrap();
+    let doo = Regex::new(r"do\(\)").unwrap();
+    let dont = Regex::new(r"don't\(\)").unwrap();
+
+    for (pos, expr) in matches {
+        //println!("Posición: {}, Coincidencia: {}", pos, expr);
+        if let Some(cap) = mul.captures(&expr) {
+            if enabled {
+                let num1: i32 = cap.get(1).unwrap().as_str().parse().unwrap();
+                let num2: i32 = cap.get(2).unwrap().as_str().parse().unwrap();
+                counter += num1 * num2;
+            }
+        } else if let Some(_) = doo.captures(&expr) {
+            enabled = true;
+        } else if let Some(_) = dont.captures(&expr) {
+            enabled = false;
+        }
+    }
+
+    println!("Day 3, part 2 : {}", counter);
 
     Ok(())
 }
