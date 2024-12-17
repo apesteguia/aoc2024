@@ -29,7 +29,7 @@ fn main() -> std::io::Result<()> {
     let doo = Regex::new(r"do\(\)").unwrap();
     let dont = Regex::new(r"don't\(\)").unwrap();
 
-    for (pos, expr) in matches {
+    for (_, expr) in matches {
         //println!("Posición: {}, Coincidencia: {}", pos, expr);
         if let Some(cap) = mul.captures(&expr) {
             if enabled {
